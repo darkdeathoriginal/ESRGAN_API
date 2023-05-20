@@ -1,5 +1,4 @@
 import os.path as osp
-import glob
 import cv2
 import numpy as np
 import torch
@@ -7,7 +6,11 @@ import RRDBNet_arch as arch
 from flask import *
 import json
 import io
+from gevent.pywsgi import WSGIServer
 
+
+app = Flask(__name__)
+app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  
 model_path = 'models/RRDB_ESRGAN_x4.pth'  # models/RRDB_ESRGAN_x4.pth OR models/RRDB_PSNR_x4.pth
 device = torch.device('cpu')  # if you want to run on CPU, change 'cuda' -> cpu
 # device = torch.device('cpu')
@@ -40,8 +43,7 @@ def start():
     output = (output * 255.0).round()
     cv2.imwrite('results/result.png'.format(base), output)
 
-app = Flask(__name__)
-app.config['MAX_CONTENT_LENGTH'] = 100 * 1024 * 1024  
+
 
 
 @app.route("/",methods=['GET'])
@@ -68,4 +70,5 @@ def upload_file():
 
 
 if __name__ == '__main__':
-    app.run(port=7000)
+    http_server = WSGIServer(('0.0.0.0', 7000), app)
+    http_server.serve_forever()
